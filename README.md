@@ -6,7 +6,7 @@ This project is a web-based application that allows users to interact with an AI
 Users can input text queries to the chatbot for conversational or generative responses.
 The backend processes the text using a language model to generate responses.
 
-##Image Captioning:
+## Image Captioning:
 
 Users can upload images, and the application generates descriptive captions.
 The backend processes the image using a pre-trained image-to-text model.

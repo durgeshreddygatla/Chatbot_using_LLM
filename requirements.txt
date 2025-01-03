@@ -1,0 +1,6 @@
+flask
+Pillow
+pyttsx3
+speechrecognition
+transformers
+openai

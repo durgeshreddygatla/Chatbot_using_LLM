@@ -5,5 +5,3 @@ transformers
 pillow
 flask
 openai
-pyttsx3
-speech_recognition

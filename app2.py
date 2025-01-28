@@ -1,12 +1,9 @@
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template
 from PIL import Image
 import logging
-import pyttsx3
-import os
 import warnings
-import speech_recognition as sr
-from io import BytesIO
 from openai import OpenAI
+from transformers import pipeline
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore")
@@ -30,7 +27,6 @@ except Exception as e:
 
 # Load image captioning model
 try:
-    from transformers import pipeline
     image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
     logger.info("Image captioning model loaded successfully.")
 except Exception as e:

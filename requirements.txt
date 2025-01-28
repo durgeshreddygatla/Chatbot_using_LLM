@@ -1,6 +1,7 @@
-flask
-Pillow
-pyttsx3
-speechrecognition
+streamlit
+pandas
+numpy
 transformers
+pillow
+flask
 openai

@@ -5,3 +5,4 @@ transformers
 pillow
 flask
 openai
+pyttsx3

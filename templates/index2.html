@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>AI Chatbot</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #007BFF, #4f86f7);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin: 15px 0;
+        }
+        #chatbox {
+            width: 100%;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            height: 420px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        #chatbox p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        #chatbox p.you {
+            text-align: right;
+            background-color: #e1f7d5;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            max-width: 50%;
+            margin-left: auto;
+        }
+        #chatbox p.bot {
+            text-align: left;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            max-width: 70%;
+        }
+        #input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        #method-select {
+            width: 50%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 15px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.1);
+        }
+        #file-input {
+            display: none;
+        }
+        #image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        button {
+            padding: 15px;
+            border: none;
+            background-color: whitesmoke;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background-color 0.3s;
+        }
+        button img {
+            width: 25px;
+            height: 25px;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Chatbot</h1>
+    <div id="chatbox"></div>
+    <div id="input-container">
+        <select id="method-select" onchange="toggleInputMethod()">
+            <option value="text-generation">Text Input</option>
+            <option value="caption-image">Image Input</option>
+        </select>
+        <input type="text" id="user-input" placeholder="Type a message..." style="display:none;">
+        <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="previewImage()">
+        <img id="image-preview" alt="Selected Image Preview">
+        <button onclick="sendMessage()" title="Send">
+            <img src="/static/send.png" alt="Send Icon">
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            toggleInputMethod(); // Ensure the correct input is displayed on load
+        });
+
+        function toggleInputMethod() {
+            const method = document.getElementById("method-select").value;
+            const textInput = document.getElementById("user-input");
+            const fileInput = document.getElementById("file-input");
+            const imagePreview = document.getElementById("image-preview");
+
+            if (method === "text-generation") {
+                textInput.style.display = "block";
+                fileInput.style.display = "none";
+                imagePreview.style.display = "none";
+            } else if (method === "caption-image") {
+                textInput.style.display = "none";
+                fileInput.style.display = "block";
+                imagePreview.style.display = "none";
+            }
+        }
+
+        function previewImage() {
+            const fileInput = document.getElementById("file-input");
+            const imagePreview = document.getElementById("image-preview");
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = "block";
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                imagePreview.style.display = "none";
+            }
+        }
+
+        function sendMessage() {
+            const method = document.getElementById("method-select").value;
+            const userInput = document.getElementById("user-input").value;
+            const fileInput = document.getElementById("file-input");
+            const chatbox = document.getElementById("chatbox");
+            const formData = new FormData();
+
+            if (method === "text-generation" && userInput.trim() !== "") {
+                // Append user input to chatbox
+                chatbox.innerHTML += `<p class="you">${userInput}</p>`;
+                formData.append("method", "text-generation");
+                formData.append("text", userInput);
+            } else if (method === "caption-image" && fileInput.files.length > 0) {
+                chatbox.innerHTML += `<p class="you">[Image Uploaded]</p>`;
+                formData.append("method", "caption-image");
+                formData.append("image", fileInput.files[0]);
+            } else {
+                return; // Do not send empty input
+            }
+
+            // Send the request to the backend
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data['Generated text']) {
+                    chatbox.innerHTML += `<p class="bot">
+                        <img src="/static/technology.png" alt="Technology Icon" style="width: 30px; height: 30px; margin-right: 10px;">
+                        ${data['Generated text']}
+                    </p>`;
+                }
+                if (data['caption']) {
+                    chatbox.innerHTML += `<p class="bot">
+                        <img src="/static/technology.png" alt="Technology Icon" style="width: 30px; height: 30px; margin-right: 10px;">
+                        ${data['caption']}
+                    </p>`;
+                }
+                if (data.error) {
+                    chatbox.innerHTML += `<p class="bot">
+                        <img src="/static/technology.png" alt="Technology Icon" style="width: 30px; height: 30px; margin-right: 10px;">
+                        ${data.error}
+                    </p>`;
+                }
+
+                // Clear input fields after response
+                if (method === "text-generation") {
+                    document.getElementById("user-input").value = "";
+                } else if (method === "caption-image") {
+                    fileInput.value = "";
+                    document.getElementById("image-preview").style.display = "none";
+                }
+
+                chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the bottom
+            })
+            .catch(error => {
+                chatbox.innerHTML += `<p class="bot">
+                    <img src="/static/technology.png" alt="Technology Icon" style="width: 30px; height: 30px; margin-right: 10px;">
+                    An error occurred. Please try again.
+                </p>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+            });
+        }
+
+    </script>
+</body>
+</html>
